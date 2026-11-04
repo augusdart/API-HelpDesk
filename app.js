@@ -1,13 +1,16 @@
 const express = require('express');
 const sequelize = require('./config/database');
+const path = require('path');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
 
 const app = express();
+
 app.use(express.json());
 
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);

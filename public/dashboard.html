@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HelpDesk - Meus Chamados</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <h2>Painel de Chamados TI</h2>
+            <button class="btn-danger" onclick="sair()">Sair</button>
+        </div>
+
+        <div class="card">
+            <h3 id="boasVindas">Carregando...</h3>
+            <ul class="ticket-list" id="listaChamados">
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        //verifica se o usuário tem o token salvo
+        const token = localStorage.getItem('token');
+        const email = localStorage.getItem('email');
+
+        if (!token) {
+            alert('Acesso negado. Faça login primeiro.');
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById('boasVindas').innerText = `Bem-vindo(a), ${email}`;
+
+        //busca os chamados na API
+        async function carregarChamados() {
+            try {
+                const response = await fetch('/api/tickets', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const lista = document.getElementById('listaChamados');
+                    
+                    data.chamados.forEach(chamado => {
+                        const classePrioridade = chamado.prioridade === 'Alta' ? 'status-alta' : 'status-media';
+                        lista.innerHTML += `
+                            <li class="ticket-item">
+                                <div class="ticket-title">#${chamado.id} - ${chamado.titulo}</div>
+                                <div>
+                                    Status: ${chamado.status} | 
+                                    Prioridade: <span class="${classePrioridade}">${chamado.prioridade}</span>
+                                </div>
+                            </li>
+                        `;
+                    });
+                } else if (response.status === 401 || response.status === 403) {
+                    alert('Sua sessão expirou. Faça login novamente.');
+                    sair();
+                }
+            } catch (error) {
+                alert('Erro ao carregar os chamados.');
+            }
+        }
+
+        function sair() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('email');
+            window.location.href = 'index.html';
+        }
+
+        carregarChamados();
+    </script>
+</body>
+</html>
